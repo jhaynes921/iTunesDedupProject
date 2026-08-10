@@ -20,7 +20,7 @@ namespace iTunesDeDuplicationProject
 
         #region Setup Stuff
 
-        internal string testLocation = "J:\\Toshiba_Backup\\iTunes_Backup\\iTunes Media\\Music\\Journey\\_backups";
+        internal string testLocation;
 
 		/*
 		string[] AudioFileTypes = new string[] { ".mp3", ".m4a", ".m4b", ".m4p", ".m4r", ".wav", ".flac", ".aac", ".wma", ".wav" };
@@ -28,11 +28,23 @@ namespace iTunesDeDuplicationProject
 		string[] PictureFileTypes = new string[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".svg" };
         */
 
-		HashSet<string> AudioFileTypes = new HashSet<string>( new[] { ".txt", ".csv", ".xml", ".json" }, StringComparer.OrdinalIgnoreCase);
+		HashSet<string> AudioFileTypes = new HashSet<string>( new[] { ".mp3", ".m4a", ".m4b", ".m4p", ".m4r", ".wav", ".flac", ".aac", ".wma", ".wav" }, StringComparer.OrdinalIgnoreCase);
 
 		public frmMain()
 		{
 			InitializeComponent();
+            string thisComputer = Environment.MachineName.ToUpper();
+            switch (thisComputer) 
+            {
+                case "ERIADOR":
+					testLocation = "J:\\Toshiba_Backup\\iTunes_Backup\\iTunes Media\\Music\\Journey\\_backups";
+					break;
+                case "MITHLOND":
+					testLocation = "C:\\Users\\henry\\Dropbox\\MP3";
+					break;
+                default:
+                    break;
+            }
 			tbDirPath.Text = testLocation;
 		}
 
@@ -64,22 +76,43 @@ namespace iTunesDeDuplicationProject
 
         public void MainProcess(string DirName) 
 		{
-            List<string> fileList = GetFileList(DirName);
+			if (!Directory.Exists(DirName))
+			{
+				WriteToDisplay("Directory \"" + DirName + "\" is invalid or does not exist.", true, false);
+				return;
+			}
 
-            int fileCount = fileList.Count;
-            WriteToDisplay("Total files found: " + fileCount.ToString("N0"));
+			List<string> fileList = GetFileList(DirName);
+            foreach (string file in fileList) 
+            {
+                
+            }
+
 
 		}
 
 
         public List<string>GetFileList(string DirName)
         {
-            List<string>fileList = new List<string>();
+			WriteToDisplay("Now processing directory \"" + DirName + "\"", true, false);
+			if (tglDirOption.Checked)
+			{
+				WriteToDisplay("Searching all subdirectories.", false, false);
+			}
+			else
+			{
+				WriteToDisplay("Searching this directory only.", false, false);
+			}
+
+			List<string>fileList = new List<string>();
 
             SearchOption srchOption = SearchOption.TopDirectoryOnly;
             if (tglDirOption.Checked) { srchOption = SearchOption.AllDirectories; }
 			fileList = Directory.EnumerateFiles(DirName, "*.*", srchOption).Where(s => AudioFileTypes.Contains(Path.GetExtension(s).ToLower())).ToList<string>();
-            return fileList;
+
+			int fileCount = fileList.Count;
+			WriteToDisplay("Total files found: " + fileCount.ToString("N0"));
+			return fileList;
            
         }
 
