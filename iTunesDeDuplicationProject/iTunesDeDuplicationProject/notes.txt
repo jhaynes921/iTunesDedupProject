@@ -115,3 +115,5 @@ foreach (var prop in shellFile.Properties.DefaultPropertyCollection)
 
 
 If you're targeting only Windows and need metadata similar to what Explorer displays, I'd recommend the Windows API Code Pack approach over Folder.GetDetailsOf().
+
+asdf
