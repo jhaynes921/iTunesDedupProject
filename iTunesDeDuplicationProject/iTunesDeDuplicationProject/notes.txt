@@ -1,0 +1,117 @@
+﻿Shell32.dll method:
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Shell32;
+
+public static class ShellMetadata
+{
+    public static Dictionary<string, string> GetFileMetadata(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentNullException(nameof(filePath));
+
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException("File not found.", filePath);
+
+        var metadata = new Dictionary<string, string>();
+
+        string directory = Path.GetDirectoryName(filePath);
+        string fileName = Path.GetFileName(filePath);
+
+        Shell shell = new Shell();
+        Folder folder = shell.NameSpace(directory);
+
+        if (folder == null)
+            return metadata;
+
+        FolderItem item = folder.ParseName(fileName);
+
+        if (item == null)
+            return metadata;
+
+        // Explorer exposes metadata columns by index
+        for (int i = 0; i < 500; i++)
+        {
+            string propertyName = folder.GetDetailsOf(null, i);
+
+            if (string.IsNullOrWhiteSpace(propertyName))
+                continue;
+
+            string propertyValue = folder.GetDetailsOf(item, i);
+
+            if (!string.IsNullOrWhiteSpace(propertyValue))
+            {
+                metadata[propertyName] = propertyValue;
+            }
+        }
+
+        return metadata;
+    }
+}
+
+
+
+Usage:
+
+var metadata = ShellMetadata.GetFileMetadata(
+    @"C:\Temp\MyPhoto.jpg");
+
+foreach (var item in metadata)
+{
+    Console.WriteLine($"{item.Key}: {item.Value}");
+}
+
+
+
+Get a single property:
+
+public static string GetMetadataProperty(string filePath, int propertyIndex)
+{
+    string directory = Path.GetDirectoryName(filePath);
+    string fileName = Path.GetFileName(filePath);
+
+    Shell shell = new Shell();
+    Folder folder = shell.NameSpace(directory);
+
+    if (folder == null)
+        return null;
+
+    FolderItem item = folder.ParseName(fileName);
+
+    if (item == null)
+        return null;
+
+    return folder.GetDetailsOf(item, propertyIndex);
+}
+
+
+Example:
+
+string title = GetMetadataProperty(filePath, 21);
+
+
+
+
+
+
+Better Alternative (Windows Vista+)
+
+For modern Windows versions, a more reliable approach is using the Windows Property System (ShellObject from the Windows API Code Pack or directly via IPropertyStore). This avoids relying on fragile column indexes, which can vary between Windows versions and locales.
+
+For example:
+
+
+using Microsoft.WindowsAPICodePack.Shell;
+
+var shellFile = ShellFile.FromFilePath(filePath);
+
+foreach (var prop in shellFile.Properties.DefaultPropertyCollection)
+{
+    Console.WriteLine($"{prop.CanonicalName} = {prop.ValueAsObject}");
+}
+
+
+If you're targeting only Windows and need metadata similar to what Explorer displays, I'd recommend the Windows API Code Pack approach over Folder.GetDetailsOf().
