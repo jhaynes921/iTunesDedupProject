@@ -11,6 +11,9 @@ using System.Windows.Documents.Serialization;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 
+using Shell32;
+
+
 namespace iTunesDeDuplicationProject
 {
 	//iTunesDeDuplicationProject
@@ -85,14 +88,30 @@ namespace iTunesDeDuplicationProject
 			List<string> fileList = GetFileList(DirName);
             foreach (string file in fileList) 
             {
-                
+                //get basic details
+                //get extended details
             }
 
 
 		}
 
+        public void GetFileDetails(string FileName)
+		{
+			FileInfo fi = new FileInfo(FileName);
+			string filePath = fi.FullName;
+			string fileName = fi.Name;
+			string fileExt = fi.Extension;
+			long fileSize = fi.Length;
+			DateTime fileCreated = fi.CreationTime;
+			DateTime fileModified = fi.LastWriteTime;
+			WriteToDisplay("File: " + fileName + " | Size: " + fileSize.ToString("N0") + " bytes | Created: " + fileCreated.ToString() + " | Modified: " + fileModified.ToString(), false, false);
+		}
 
-        public List<string>GetFileList(string DirName)
+		public void GetExtendedDetails(string FileName)
+		{ 
+		}
+
+		public List<string>GetFileList(string DirName)
         {
 			WriteToDisplay("Now processing directory \"" + DirName + "\"", true, false);
 			if (tglDirOption.Checked)
